@@ -1,0 +1,54 @@
+# render.yaml — Render Blueprint (Infrastructure as Code)
+# Docs: https://render.com/docs/blueprint-spec
+#
+# Para usar: conecta tu repo de GitHub en Render.com → New → Blueprint
+
+services:
+  - type: web
+    name: vending-backend
+    runtime: python
+    region: oregon           # us-west (más cercano a México)
+    plan: free               # Tier gratuito ✅
+    branch: main             # rama a deployar
+
+    # ── Build ──────────────────────────────────────────────────────────────────
+    buildCommand: pip install -r requirements.txt
+
+    # ── Start ──────────────────────────────────────────────────────────────────
+    # Render inyecta $PORT automáticamente
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1
+
+    # ── Health check ──────────────────────────────────────────────────────────
+    healthCheckPath: /health
+
+    # ── Variables de entorno ──────────────────────────────────────────────────
+    # IMPORTANTE: Los valores reales se configuran en el Dashboard de Render,
+    # NO se guardan aquí (evitar exponer secretos).
+    envVars:
+      - key: APP_ENV
+        value: production
+
+      - key: DATABASE_URL
+        sync: false          # El valor se ingresa manualmente en Render Dashboard
+
+      - key: SUPABASE_URL
+        sync: false
+
+      - key: SUPABASE_ANON_KEY
+        sync: false
+
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+
+      - key: SECRET_KEY
+        generateValue: true  # Render genera una clave aleatoria segura ✅
+
+      - key: CORS_ORIGINS
+        value: "*"           # Actualizar con tu dominio de prod cuando tengas frontend
+
+      # Stripe (opcional — no requerido si no está integrado aún)
+      - key: STRIPE_SECRET_KEY
+        sync: false
+
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
